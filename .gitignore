@@ -1,0 +1,7 @@
+.next
+node_modules
+dist
+.node-portable
+matrix9-interface
+*.log
+*.zip
