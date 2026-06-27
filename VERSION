@@ -1,0 +1,30 @@
+Module name: Soul of Love Daily Energy
+Current version: 1.0.0-rc1
+Release status: Production Candidate RC1
+Build date: 2026-06-27
+
+Major completed milestones:
+- Layered Daily Energy reading engine with card, aura, orientation, and energy score context.
+- Major Arcana deck data prepared for hero artwork support.
+- Soul of Love Design Bible and master visual language established.
+- Hero Artwork loader with symbolic fallback for unfinished assets.
+- Prompt Engine modularized into style, aura, card, energy, composition, and negative prompt layers.
+- Premium card-first UI restored for stable free-version use.
+- Today's Reading section separated from the main hero experience.
+- Broken Social Export preview removed from the user-facing UI.
+- AI Artwork Prompt Generator retained for external image/result-card generation.
+- App shell refactored into dedicated component and platform utility modules.
+
+Known limitations:
+- Social PNG export is intentionally disabled for RC1 while the poster layout is redesigned.
+- Only a small set of Major Arcana hero artwork assets has been validated; unfinished cards use symbolic fallback.
+- Daily Energy uses local in-browser state only; there is no account system, saved history, backend, or analytics.
+- The reading system is symbolic and behavioral, not deterministic fortune telling.
+- Prompt copy relies on browser clipboard permissions.
+
+Future roadmap:
+- Rebuild Social Export as a separate production-grade poster renderer.
+- Complete and lock all 22 Major Arcana hero artworks.
+- Add module contracts for Matrix 9, Aura, Compatibility, Oracle, and Portfolio surfaces.
+- Add shared design tokens for the broader Soul of Love platform.
+- Add optional persistence once platform account/storage decisions are made.

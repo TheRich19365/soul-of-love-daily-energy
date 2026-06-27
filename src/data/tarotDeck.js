@@ -1,4 +1,127 @@
-export const tarotDeck = [
+import { heroArtworkStatusByName, isHeroArtworkLocked } from "./heroArtworkStatus.js";
+
+const majorArcanaArtwork = {
+  "The Fool": {
+    hero: "/cards/major/the-fool.webp",
+    fallbackSymbol: "↗",
+    promptSeed: "pearl white cosmic cliff, innocent traveler, soft starlight, new beginning, gentle freedom"
+  },
+  "The Magician": {
+    hero: "/cards/major/the-magician.webp",
+    fallbackSymbol: "∞",
+    promptSeed: "violet gold cosmic altar, intentional creator, luminous tools, manifestation, elegant power"
+  },
+  "The High Priestess": {
+    hero: "/cards/major/the-high-priestess.webp",
+    fallbackSymbol: "☾",
+    promptSeed: "indigo moon temple, silent oracle, veiled intuition, sacred mystery, soft inner light"
+  },
+  "The Empress": {
+    hero: "/cards/major/the-empress.webp",
+    fallbackSymbol: "✿",
+    promptSeed: "rose emerald celestial garden, divine nurture, abundance, beauty, gentle healing"
+  },
+  "The Emperor": {
+    hero: "/cards/major/the-emperor.webp",
+    fallbackSymbol: "▣",
+    promptSeed: "gold crimson cosmic throne, grounded authority, sacred structure, calm leadership"
+  },
+  "The Hierophant": {
+    hero: "/cards/major/the-hierophant.webp",
+    fallbackSymbol: "✦",
+    promptSeed: "ancient star temple, spiritual teacher, sacred wisdom, tradition, luminous guidance"
+  },
+  "The Lovers": {
+    hero: "/cards/major/the-lovers.webp",
+    fallbackSymbol: "♡",
+    promptSeed: "rose gold twin lights, sacred choice, heart connection, harmony, gentle union"
+  },
+  "The Chariot": {
+    hero: "/cards/major/the-chariot.webp",
+    fallbackSymbol: "➤",
+    promptSeed: "crimson celestial chariot, focused movement, victory, sacred direction, controlled momentum"
+  },
+  Strength: {
+    hero: "/cards/major/strength.webp",
+    fallbackSymbol: "♌",
+    promptSeed: "gold rose lion aura, quiet courage, compassionate strength, inner steadiness"
+  },
+  "The Hermit": {
+    hero: "/cards/major/the-hermit.webp",
+    fallbackSymbol: "✧",
+    promptSeed: "deep blue mountain lantern, wise solitude, inner path, starlit contemplation"
+  },
+  "Wheel of Fortune": {
+    hero: "/cards/major/wheel-of-fortune.webp",
+    fallbackSymbol: "◎",
+    promptSeed: "cosmic golden wheel, turning fate, cycles, timing, celestial movement"
+  },
+  Justice: {
+    hero: "/cards/major/justice.webp",
+    fallbackSymbol: "⚖",
+    promptSeed: "silver gold cosmic scales, truth, balance, clear choice, sacred fairness"
+  },
+  "The Hanged Man": {
+    hero: "/cards/major/the-hanged-man.webp",
+    fallbackSymbol: "↺",
+    promptSeed: "suspended starlight figure, surrender, new perspective, soft pause, spiritual release"
+  },
+  Death: {
+    hero: "/cards/major/death.webp",
+    fallbackSymbol: "✶",
+    promptSeed: "black violet dawn threshold, transformation, gentle ending, rebirth, sacred release"
+  },
+  Temperance: {
+    hero: "/cards/major/temperance.webp",
+    fallbackSymbol: "〰",
+    promptSeed: "blue gold flowing light, sacred blending, balance, healing water, calm integration"
+  },
+  "The Devil": {
+    hero: "/cards/major/the-devil.webp",
+    fallbackSymbol: "◇",
+    promptSeed: "dark ruby mirror chamber, desire awareness, shadow integration, liberation, inner honesty"
+  },
+  "The Tower": {
+    hero: "/cards/major/the-tower.webp",
+    fallbackSymbol: "⚡",
+    promptSeed: "violet storm tower, awakening flash, collapse of illusion, cleansing lightning, safe transformation"
+  },
+  "The Star": {
+    hero: "/cards/major/the-star.webp",
+    fallbackSymbol: "✩",
+    promptSeed: "aqua starlit water, hope, healing, cosmic blessing, soft renewal"
+  },
+  "The Moon": {
+    hero: "/cards/major/the-moon.webp",
+    fallbackSymbol: "☽",
+    promptSeed: "silver indigo moon path, dream mist, subconscious, emotional mystery, gentle night"
+  },
+  "The Sun": {
+    hero: "/cards/major/the-sun.webp",
+    fallbackSymbol: "☀",
+    promptSeed: "solar gold cosmic sunrise, joy, vitality, radiant truth, warm clarity"
+  },
+  Judgement: {
+    hero: "/cards/major/judgement.webp",
+    fallbackSymbol: "↟",
+    promptSeed: "violet gold awakening sky, soul calling, forgiveness, rebirth, rising light"
+  },
+  "The World": {
+    hero: "/cards/major/the-world.webp",
+    fallbackSymbol: "◉",
+    promptSeed: "emerald gold cosmic circle, completion, integration, wholeness, elegant celestial dance"
+  }
+};
+
+// Required hero artwork filenames:
+// the-fool.webp, the-magician.webp, the-high-priestess.webp, the-empress.webp,
+// the-emperor.webp, the-hierophant.webp, the-lovers.webp, the-chariot.webp,
+// strength.webp, the-hermit.webp, wheel-of-fortune.webp, justice.webp,
+// the-hanged-man.webp, death.webp, temperance.webp, the-devil.webp,
+// the-tower.webp, the-star.webp, the-moon.webp, the-sun.webp,
+// judgement.webp, the-world.webp
+
+const baseTarotDeck = [
   {
     id: 0,
     englishName: "The Fool",
@@ -638,3 +761,26 @@ export const tarotDeck = [
     guidanceText: "วันนี้ให้คุณเห็นภาพใหญ่ของชีวิต สิ่งที่ผ่านมามีความหมาย และคุณมีสิทธิ์ก้าวต่อด้วยความครบถ้วนกว่าเดิม"
   }
 ];
+
+export const tarotDeck = baseTarotDeck.map((card) => {
+  const artworkStatus = heroArtworkStatusByName[card.englishName];
+  const artwork = majorArcanaArtwork[card.englishName] || {
+    hero: "",
+    fallbackSymbol: "✦",
+    promptSeed: `${card.englishName}, premium mystical oracle card background`
+  };
+
+  return {
+    ...card,
+    artwork: {
+      ...artwork,
+      hero: isHeroArtworkLocked(artworkStatus) ? `/cards/major/${artworkStatus.filename}` : "",
+      status: artworkStatus?.status || "pending",
+      version: artworkStatus?.version || "none",
+      lastUpdated: artworkStatus?.lastUpdated || "",
+      artist: artworkStatus?.artist || "",
+      reviewNotes: artworkStatus?.reviewNotes || "",
+      approvedBy: artworkStatus?.approvedBy || ""
+    }
+  };
+});
