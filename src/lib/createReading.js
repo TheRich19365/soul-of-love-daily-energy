@@ -4,6 +4,7 @@ import { tarotDeck } from '../data/tarotDeck.js';
 import { makeAreaInsight } from './createAreaInsight.js';
 import { createLayeredInterpretation } from './createLayeredInterpretation.js';
 import { randomItem, randomNumber } from './random.js';
+import { buildEnergyReading } from '../readingKnowledge/buildEnergyReading.js';
 
 export function createReading(mode = 'daily-card') {
   const selectedModeText = modeText[mode];
@@ -22,6 +23,13 @@ export function createReading(mode = 'daily-card') {
     mode,
     modeText
   });
+  const knowledgeReading = buildEnergyReading({
+    card,
+    aura,
+    aspect: orientation,
+    score,
+    language: "TH"
+  });
   const focus = layered.focus || randomItem(card.focusPoints);
 
   return {
@@ -30,17 +38,19 @@ export function createReading(mode = 'daily-card') {
     orientation,
     aura,
     energyScore: score,
-    universeMessage: layered.universeMessage || selectedModeText?.guidance?.(card, orientation) || fallbackGuidance,
-    soulMessage: layered.soulMessage || randomItem(card.soulMessages),
-    warning: layered.warning || randomItem(card.warnings),
-    focus,
-    focusPoint: focus,
-    emotionalState: randomItem(card.emotionalStates),
-    guidance: layered.guidance || fallbackGuidance,
-    mission: layered.mission || selectedModeText?.focus || randomItem(card.focusPoints),
-    affirmation: layered.affirmation || randomItem(card.soulMessages),
-    love: layered.love || makeAreaInsight('love', card, orientation),
-    work: layered.work || makeAreaInsight('work', card, orientation),
-    money: layered.money || makeAreaInsight('money', card, orientation)
+    mainEnergy: knowledgeReading.mainEnergy || card.energyTheme,
+    universeMessage: knowledgeReading.universe || layered.universeMessage || selectedModeText?.guidance?.(card, orientation) || fallbackGuidance,
+    soulMessage: knowledgeReading.soulMessage || layered.soulMessage || randomItem(card.soulMessages),
+    warning: knowledgeReading.warning || layered.warning || randomItem(card.warnings),
+    focus: knowledgeReading.focus || focus,
+    focusPoint: knowledgeReading.focus || focus,
+    emotionalState: knowledgeReading.emotionalState || randomItem(card.emotionalStates),
+    guidance: knowledgeReading.guidance || layered.guidance || fallbackGuidance,
+    mission: knowledgeReading.mission || layered.mission || selectedModeText?.focus || randomItem(card.focusPoints),
+    affirmation: knowledgeReading.affirmation || layered.affirmation || randomItem(card.soulMessages),
+    love: knowledgeReading.love || layered.love || makeAreaInsight('love', card, orientation),
+    work: knowledgeReading.work || layered.work || makeAreaInsight('work', card, orientation),
+    money: knowledgeReading.money || layered.money || makeAreaInsight('money', card, orientation),
+    knowledgeMeta: knowledgeReading.meta
   };
 }

@@ -1,7 +1,7 @@
 Module name: Soul of Love Daily Energy
 Current version: 1.0.0-rc1
-Release status: Production Candidate RC1
-Build date: 2026-06-27
+Release status: Daily Energy v1.0 Gold Master Candidate
+Build date: 2026-06-28
 
 Major completed milestones:
 - Layered Daily Energy reading engine with card, aura, orientation, and energy score context.
@@ -14,6 +14,14 @@ Major completed milestones:
 - Broken Social Export preview removed from the user-facing UI.
 - AI Artwork Prompt Generator retained for external image/result-card generation.
 - App shell refactored into dedicated component and platform utility modules.
+
+Changelog:
+2026-06-28
+- Final visual aura rendering polish
+- Reading Knowledge Engine refinement
+- Semantic QA added
+- AI Poster Prompt Generator stabilized
+- Production health report updated
 
 Known limitations:
 - Social PNG export is intentionally disabled for RC1 while the poster layout is redesigned.

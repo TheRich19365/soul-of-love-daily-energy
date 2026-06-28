@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Heart } from "lucide-react";
 import { AdaptiveQuote } from "./common/SoulUI.jsx";
 import { getLayoutProfile, orientationLabel } from "../platform/utils/displayUtils.js";
+import { getAuraRendering } from "../visual/auraRendering.js";
 
 export function DailyDraw({ reading, drawPhase, hasDrawn }) {
   const isRevealed = drawPhase === "revealed";
@@ -47,14 +48,20 @@ export function DailyDraw({ reading, drawPhase, hasDrawn }) {
 function TarotSimulation({ reading, phase }) {
   const showBack = phase === "idle" || phase === "shuffle" || phase === "rise";
   const isFaceVisible = phase === "flip" || phase === "revealed";
+  const auraRender = getAuraRendering(reading.aura, reading.orientation);
 
   return (
     <motion.div
       className="relative aspect-[3/4] overflow-hidden rounded-[1.25rem] border border-white/12 bg-slate-950 perspective-1000"
       whileHover={{ scale: 1.015 }}
-      style={{ boxShadow: `0 0 80px ${reading.aura.glow}` }}
+      style={{
+        background: auraRender.frame.innerBase,
+        borderColor: auraRender.frame.borderColor,
+        boxShadow: auraRender.cardGlow
+      }}
     >
-      <div className="absolute inset-0 opacity-80" style={{ background: `radial-gradient(circle at 50% 28%, ${reading.aura.hex}66, transparent 26%), radial-gradient(circle at 50% 70%, rgba(248,199,107,.22), transparent 34%), linear-gradient(160deg, rgba(255,255,255,.08), rgba(255,255,255,0))` }} />
+      <div className="absolute inset-0 opacity-90" style={{ background: auraRender.fieldBackground }} />
+      <div className="absolute inset-0 opacity-50 mix-blend-screen" style={{ background: `linear-gradient(135deg, transparent, ${auraRender.lightReflection} 36%, transparent 52%, ${auraRender.metallicReflection})` }} />
       <ShuffleCards active={phase === "shuffle"} aura={reading.aura} />
 
       <motion.div
@@ -89,17 +96,19 @@ function CardFace({ reading }) {
   const heroArtwork = reading.card.artwork?.hero;
   const showHeroArtwork = Boolean(heroArtwork && !heroFailed);
   const layout = getLayoutProfile(reading);
+  const auraRender = getAuraRendering(reading.aura, reading.orientation);
 
   return (
     <div className="absolute inset-0 overflow-hidden">
-      <div className="absolute inset-0" style={{ background: `radial-gradient(circle at 50% 24%, ${reading.aura.hex}77, transparent 28%), radial-gradient(circle at 50% 82%, rgba(248,199,107,.2), transparent 34%), linear-gradient(160deg, rgba(255,255,255,.13), rgba(255,255,255,0))` }} />
+      <div className="absolute inset-0" style={{ background: auraRender.fieldBackground }} />
+      <div className="absolute inset-0 opacity-55 mix-blend-screen" style={{ background: `linear-gradient(130deg, ${auraRender.lightReflection}, transparent 34%, ${auraRender.glassRefraction} 62%, transparent)` }} />
       <motion.div
         className="absolute -inset-16 rounded-full opacity-60 blur-2xl"
-        animate={{ opacity: [0.32, 0.62, 0.32], scale: [0.9, 1.08, 0.9] }}
+        animate={{ opacity: auraRender.isShadow ? [0.2, 0.38, 0.2] : [0.32, 0.68, 0.32], scale: auraRender.isShadow ? [0.94, 1.03, 0.94] : [0.9, 1.09, 0.9] }}
         transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
-        style={{ background: reading.aura.glow }}
+        style={{ background: `radial-gradient(circle, ${auraRender.coreGlow}, ${auraRender.outerBloom}, transparent 68%)` }}
       />
-      <SoulSignatureField aura={reading.aura} density="card" />
+      <SoulSignatureField aura={reading.aura} orientation={reading.orientation} density="card" />
       <div className="absolute inset-x-0 top-5 text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.26em] text-amber-100">Major Arcana {reading.card.id}</p>
       </div>
@@ -107,13 +116,17 @@ function CardFace({ reading }) {
         {showHeroArtwork ? (
           <HeroCardArtwork reading={reading} onError={() => setHeroFailed(true)} artworkClass={layout.artworkClass} />
         ) : (
-          <CardSymbol cardId={reading.card.id} aura={reading.aura} animated={false} sizeClass={layout.symbolClass} />
+          <CardSymbol cardId={reading.card.id} aura={reading.aura} orientation={reading.orientation} animated={false} sizeClass={layout.symbolClass} />
         )}
       </div>
       <div className="absolute inset-x-0 bottom-0 p-4 pb-5">
         <div
           className="rounded-2xl border bg-black/32 px-4 py-3 text-center backdrop-blur-xl"
-          style={{ borderColor: `${reading.aura.hex}44`, boxShadow: `0 0 28px ${reading.aura.hex}20` }}
+          style={{
+            borderColor: auraRender.frame.rimColor,
+            background: auraRender.isShadow ? "rgba(2,1,8,.48)" : "rgba(0,0,0,.28)",
+            boxShadow: `0 0 28px ${auraRender.outerBloom}, inset 0 1px 0 ${auraRender.lightReflection}`
+          }}
         >
           <p className="mb-1 text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-slate-300">Major Arcana</p>
           <p className={`${layout.titleClass} line-clamp-2 font-semibold text-white`}>{reading.card.thaiName}</p>
@@ -127,6 +140,7 @@ function CardFace({ reading }) {
 function HeroCardArtwork({ reading, onError, artworkClass = "h-[86%] w-[86%]" }) {
   const reduceMotion = useReducedMotion();
   const shouldAnimate = !reduceMotion;
+  const auraRender = getAuraRendering(reading.aura, reading.orientation);
 
   return (
     <motion.div
@@ -134,43 +148,54 @@ function HeroCardArtwork({ reading, onError, artworkClass = "h-[86%] w-[86%]" })
       animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
       transition={{ duration: 0.72, ease: [0.22, 1, 0.36, 1] }}
       className={`relative ${artworkClass} rounded-[1.15rem] border bg-slate-950`}
-      style={{ borderColor: `${reading.aura.hex}66`, boxShadow: `0 0 54px ${reading.aura.hex}38` }}
+      style={{
+        borderColor: auraRender.frame.borderColor,
+        background: auraRender.frame.frameBase,
+        boxShadow: auraRender.artworkGlow
+      }}
     >
+      <div
+        className="pointer-events-none absolute -inset-px rounded-[1.15rem] opacity-90"
+        style={{ background: auraRender.frame.frameBase }}
+      />
       <motion.div
         className="pointer-events-none absolute -inset-3 rounded-[1.45rem]"
-        animate={shouldAnimate ? { opacity: [0.22, 0.42, 0.22], scale: [0.985, 1.018, 0.985] } : { opacity: 0.24, scale: 1 }}
+        animate={shouldAnimate ? { opacity: auraRender.isShadow ? [0.16, 0.3, 0.16] : [0.24, 0.48, 0.24], scale: auraRender.isShadow ? [0.99, 1.01, 0.99] : [0.985, 1.018, 0.985] } : { opacity: 0.24, scale: 1 }}
         transition={shouldAnimate ? { duration: 8.4, repeat: Infinity, ease: "easeInOut" } : undefined}
-        style={{ boxShadow: `0 0 42px ${reading.aura.hex}44, 0 0 88px ${reading.aura.hex}22` }}
+        style={{ boxShadow: auraRender.artworkGlow }}
       />
-      <div className="relative h-full w-full overflow-hidden rounded-[1.15rem]">
+      <div className="relative m-[2px] h-[calc(100%-4px)] w-[calc(100%-4px)] overflow-hidden rounded-[1.05rem]">
         <img
           src={reading.card.artwork.hero}
           alt=""
-          className="h-full w-full object-cover"
+          className={`h-full w-full object-cover ${auraRender.isShadow ? "brightness-[0.88] contrast-[1.08] saturate-[0.92]" : "brightness-[1.06] contrast-[1.04] saturate-[1.08]"}`}
           onError={onError}
           draggable="false"
         />
-        <div className="absolute inset-0 mix-blend-screen" style={{ background: `radial-gradient(circle at 50% 35%, ${reading.aura.hex}33, transparent 36%), linear-gradient(180deg, transparent 44%, rgba(2,1,8,.48) 100%)` }} />
+        <div className="absolute inset-0 mix-blend-screen" style={{ background: auraRender.artworkOverlay }} />
+        <div className="absolute inset-0 opacity-70" style={{ background: `radial-gradient(circle at 50% 20%, ${auraRender.volumetricRays}, transparent 34%), linear-gradient(120deg, transparent 8%, ${auraRender.lightReflection} 18%, transparent 32%, ${auraRender.metallicReflection} 80%, transparent)` }} />
         {shouldAnimate && (
           <motion.div
-            className="pointer-events-none absolute -inset-y-10 -left-1/2 w-1/3 rotate-12 bg-white/20 blur-xl"
-            animate={{ x: ["0%", "520%"], opacity: [0, 0.22, 0] }}
+            className="pointer-events-none absolute -inset-y-10 -left-1/2 w-1/3 rotate-12 blur-xl"
+            animate={{ x: ["0%", "520%"], opacity: auraRender.isShadow ? [0, 0.12, 0] : [0, 0.24, 0] }}
             transition={{ duration: 3.2, repeat: Infinity, repeatDelay: 10.5, ease: "easeInOut" }}
+            style={{ background: auraRender.lightReflection }}
           />
         )}
-        <div className="absolute inset-0 rounded-[1.15rem] ring-1 ring-inset ring-white/15" />
+        <div className="absolute inset-0 rounded-[1.05rem] ring-1 ring-inset" style={{ boxShadow: `inset 0 0 28px ${auraRender.frame.metalColor}`, borderColor: auraRender.frame.rimColor }} />
       </div>
     </motion.div>
   );
 }
 
-export function SoulSignatureField({ aura, density = "card" }) {
+export function SoulSignatureField({ aura, orientation = "upright", density = "card" }) {
   const isExport = density === "export";
   const reduceMotion = useReducedMotion();
   const shouldAnimate = !isExport && !reduceMotion;
+  const auraRender = getAuraRendering(aura, orientation);
   const ringInset = isExport ? "inset-[16%]" : "inset-[12%]";
-  const ringOpacity = isExport ? 0.2 : 0.24;
-  const axisOpacity = isExport ? 0.18 : 0.16;
+  const ringOpacity = isExport ? 0.2 : auraRender.isShadow ? 0.18 : 0.28;
+  const axisOpacity = isExport ? 0.18 : auraRender.isShadow ? 0.12 : 0.2;
   const dust = isExport
     ? [
         ["18%", "22%", "0.28"], ["72%", "19%", "0.26"], ["84%", "38%", "0.2"],
@@ -189,7 +214,9 @@ export function SoulSignatureField({ aura, density = "card" }) {
         transition={shouldAnimate ? { duration: 12, repeat: Infinity, ease: "easeInOut" } : undefined}
         style={{
           borderColor: `${aura.hex}66`,
-          boxShadow: `0 0 38px ${aura.hex}44, inset 0 0 32px ${aura.hex}18`
+          boxShadow: auraRender.isShadow
+            ? `0 0 28px ${auraRender.outerBloom}, inset 0 0 34px ${auraRender.glassRefraction}`
+            : `0 0 42px ${auraRender.outerBloom}, 0 0 72px ${auraRender.coreGlow}, inset 0 0 32px ${auraRender.glassRefraction}`
         }}
       />
       <div className="absolute left-1/2 top-[4%] h-[92%] w-px -translate-x-1/2 overflow-hidden">
@@ -198,8 +225,10 @@ export function SoulSignatureField({ aura, density = "card" }) {
           animate={shouldAnimate ? { opacity: [axisOpacity * 0.68, axisOpacity, axisOpacity * 0.68], scaleY: [0.96, 1.04, 0.96] } : { opacity: axisOpacity, scaleY: 1 }}
           transition={shouldAnimate ? { duration: 7.2, repeat: Infinity, ease: "easeInOut" } : undefined}
           style={{
-            background: "linear-gradient(180deg, transparent, rgba(248,199,107,.58) 18%, rgba(255,255,255,.34) 50%, rgba(248,199,107,.52) 82%, transparent)",
-            boxShadow: "0 0 18px rgba(248,199,107,.38)",
+            background: auraRender.isShadow
+              ? "linear-gradient(180deg, transparent, rgba(148,163,184,.35) 20%, rgba(255,255,255,.18) 50%, rgba(76,29,149,.26) 82%, transparent)"
+              : "linear-gradient(180deg, transparent, rgba(248,199,107,.62) 18%, rgba(255,255,255,.4) 50%, rgba(248,199,107,.56) 82%, transparent)",
+            boxShadow: auraRender.isShadow ? "0 0 14px rgba(203,213,225,.24)" : "0 0 18px rgba(248,199,107,.38)",
             transformOrigin: "center"
           }}
         />
@@ -209,17 +238,17 @@ export function SoulSignatureField({ aura, density = "card" }) {
             animate={{ top: ["-24%", "108%"], opacity: [0, 0.55, 0] }}
             transition={{ duration: 5.8, repeat: Infinity, ease: "easeInOut", repeatDelay: 1.2 }}
             style={{
-              background: "linear-gradient(180deg, transparent, rgba(255,255,255,.92), transparent)",
-              boxShadow: "0 0 18px rgba(248,199,107,.5)"
-            }}
-          />
+            background: `linear-gradient(180deg, transparent, ${auraRender.lightReflection}, transparent)`,
+            boxShadow: auraRender.isShadow ? `0 0 14px ${auraRender.outerBloom}` : "0 0 18px rgba(248,199,107,.5)"
+          }}
+        />
         )}
       </div>
       <motion.div
         className="absolute left-[13%] right-[13%] top-[29%] bottom-[29%] rounded-full border"
         animate={shouldAnimate ? { rotate: 360 } : { rotate: 0 }}
         transition={shouldAnimate ? { duration: 140, repeat: Infinity, ease: "linear" } : undefined}
-        style={{ borderColor: `${aura.hex}1f`, transformOrigin: "center" }}
+        style={{ borderColor: auraRender.isShadow ? `${aura.hex}16` : `${aura.hex}24`, transformOrigin: "center" }}
       />
       {dust.map(([left, top, opacity], index) => (
         <motion.span
@@ -243,8 +272,8 @@ export function SoulSignatureField({ aura, density = "card" }) {
           style={{
             left,
             top,
-            background: index % 3 === 0 ? "#f8c76b" : aura.hex,
-            boxShadow: `0 0 12px ${index % 3 === 0 ? "rgba(248,199,107,.75)" : aura.hex}`
+            background: index % 3 === 0 ? auraRender.particle : aura.hex,
+            boxShadow: `0 0 12px ${index % 3 === 0 ? auraRender.coreGlow : auraRender.outerBloom}`
           }}
         />
       ))}
@@ -252,9 +281,10 @@ export function SoulSignatureField({ aura, density = "card" }) {
   );
 }
 
-export function CardSymbol({ cardId, aura, animated = true, sizeClass = "h-[86%] w-[86%]" }) {
+export function CardSymbol({ cardId, aura, orientation = "upright", animated = true, sizeClass = "h-[86%] w-[86%]" }) {
   const reduceMotion = useReducedMotion();
   const shouldAnimate = animated && !reduceMotion;
+  const auraRender = getAuraRendering(aura, orientation);
   const stroke = aura.hex;
   const common = {
     fill: "none",
@@ -265,7 +295,7 @@ export function CardSymbol({ cardId, aura, animated = true, sizeClass = "h-[86%]
   return (
     <motion.svg
       viewBox="0 0 220 220"
-      className={`${sizeClass} drop-shadow-[0_0_22px_rgba(248,199,107,.25)]`}
+      className={`${sizeClass} ${auraRender.isShadow ? "drop-shadow-[0_0_18px_rgba(148,163,184,.18)]" : "drop-shadow-[0_0_24px_rgba(248,199,107,.28)]"}`}
       animate={shouldAnimate ? { y: [0, -6, 0] } : { y: 0 }}
       transition={shouldAnimate ? { duration: 4.2, repeat: Infinity, ease: "easeInOut" } : undefined}
       aria-hidden="true"
@@ -339,9 +369,10 @@ function renderCardSymbol(cardId, stroke) {
 }
 
 function TarotBack({ aura }) {
+  const auraRender = getAuraRendering(aura, "upright");
   return (
     <div className="absolute inset-0 overflow-hidden rounded-[1.15rem] border border-amber-100/25 bg-[#080514] [backface-visibility:hidden]">
-      <div className="absolute inset-0" style={{ background: `radial-gradient(circle at 50% 42%, ${aura.hex}44, transparent 28%), linear-gradient(160deg, rgba(248,199,107,.2), transparent 42%, rgba(56,189,248,.14))` }} />
+      <div className="absolute inset-0" style={{ background: `radial-gradient(circle at 50% 42%, ${auraRender.coreGlow}, transparent 28%), linear-gradient(160deg, rgba(248,199,107,.22), transparent 42%, ${auraRender.glassRefraction})` }} />
       <div className="absolute inset-5 rounded-[1rem] border border-amber-100/30" />
       <div className="absolute inset-10 rounded-full border border-amber-100/30" />
       <div className="absolute left-1/2 top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-amber-100/50" />
@@ -354,6 +385,7 @@ function TarotBack({ aura }) {
 }
 
 function ShuffleCards({ active, aura }) {
+  const auraRender = getAuraRendering(aura, "upright");
   return (
     <div className="absolute inset-0 grid place-items-center">
       {[0, 1, 2, 3, 4].map((index) => (
@@ -371,7 +403,7 @@ function ShuffleCards({ active, aura }) {
               : { opacity: 0, scale: 0.9 }
           }
           transition={{ duration: 0.8, repeat: active ? Infinity : 0, ease: "easeInOut", delay: index * 0.04 }}
-          style={{ boxShadow: `0 0 28px ${aura.glow}` }}
+          style={{ boxShadow: `0 0 28px ${auraRender.outerBloom}` }}
         />
       ))}
     </div>

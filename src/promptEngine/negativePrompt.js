@@ -1,16 +1,19 @@
 export const negativePrompt = [
-  "text",
-  "letters",
-  "typography",
-  "numbers",
-  "logo",
   "watermark",
   "signature",
-  "readable symbols",
   "accidental letters",
-  "fake Thai text",
-  "fake English text",
+  "missing typography",
+  "missing Soul of Love branding",
+  "missing energy score",
+  "missing aura panel",
+  "missing card name",
+  "missing universe message panel",
+  "unreadable Thai text",
+  "unreadable English text",
   "malformed glyphs",
+  "upside-down characters",
+  "rotated human figure",
+  "inverted portrait",
   "horror",
   "gore",
   "demons",
@@ -24,13 +27,14 @@ export const negativePrompt = [
   "extra fingers",
   "broken scales",
   "cluttered sacred geometry",
+  "cluttered poster layout",
   "busy background",
   "harsh neon",
   "cheap yellow gold",
   "heavy tarot border",
   "low resolution",
   "blurry subject",
-  "UI text baked into image"
+  "fake watermark"
 ];
 
 export function buildNegativePrompt() {

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Activity, BriefcaseBusiness, CircleDot, Coins, Compass, Heart, Orbit, ShieldAlert, Sparkles, Wand2, Waves } from "lucide-react";
+import { Activity, BriefcaseBusiness, CircleDot, Coins, Compass, Heart, Orbit, ShieldAlert, Sparkles, Wand2 } from "lucide-react";
 import { AdaptiveQuote } from "./common/SoulUI.jsx";
 import { orientationLabel, orientationMeaning } from "../platform/utils/displayUtils.js";
 import { revealContainer, revealItem } from "../platform/config/uiConstants.js";
@@ -85,20 +85,18 @@ export function DailyInsights({ reading }) {
         </motion.div>
       </motion.article>
 
-      <GuidanceCard title="คำแนะนำสำหรับวันนี้" icon={Wand2} text={reading.guidance} tone="violet" />
-      <GuidanceCard title="ภารกิจวันนี้" icon={CircleDot} text={reading.mission} tone="cyan" />
-      <GuidanceCard title="ข้อความจากจิตวิญญาณ" icon={Waves} text={reading.soulMessage} tone="gold" />
       <GuidanceCard title="ความรักวันนี้" icon={Heart} text={reading.love} tone="rose" />
       <GuidanceCard title="งาน / เส้นทางวันนี้" icon={BriefcaseBusiness} text={reading.work} tone="cyan" />
       <GuidanceCard title="เงิน / คุณค่า / ทรัพยากร" icon={Coins} text={reading.money} tone="emerald" />
       <GuidanceCard title="จุดโฟกัสวันนี้" icon={Compass} text={reading.focus || reading.focusPoint} tone="cyan" />
       <GuidanceCard title="คำเตือนจากจักรวาล" icon={ShieldAlert} text={reading.warning} tone="gold" />
       <GuidanceCard title="คำยืนยันพลังงาน" icon={Sparkles} text={reading.affirmation} tone="violet" />
+      <GuidanceCard title="ภารกิจวันนี้" icon={CircleDot} text={reading.mission} tone="cyan" className="sm:col-span-2" />
     </motion.section>
   );
 }
 
-function GuidanceCard({ title, icon: Icon, text, tone }) {
+function GuidanceCard({ title, icon: Icon, text, tone, className = "" }) {
   const tones = {
     cyan: "border-sky-200/20 bg-sky-200/10 text-sky-100",
     gold: "border-amber-200/20 bg-amber-200/10 text-amber-100",
@@ -108,7 +106,7 @@ function GuidanceCard({ title, icon: Icon, text, tone }) {
   };
 
   return (
-    <motion.article variants={revealItem} className={`rounded-[1.35rem] border p-4 backdrop-blur-xl ${tones[tone]}`}>
+    <motion.article variants={revealItem} className={`rounded-[1.35rem] border p-4 backdrop-blur-xl ${tones[tone]} ${className}`}>
       <div className="mb-3 flex items-center gap-2">
         <Icon className="h-4 w-4" />
         <h3 className="text-sm font-semibold uppercase tracking-[0.18em]">{title}</h3>
@@ -124,7 +122,7 @@ export function ProductInfoPanel() {
     ["Design Bible", "v1.0"],
     ["Hero Artwork Progress", "3 / 22 test assets"],
     ["Reading Engine", "Layered Narrative v2"],
-    ["Last Updated", "2026-06-27"]
+    ["Last Updated", "2026-06-28"]
   ];
 
   return (

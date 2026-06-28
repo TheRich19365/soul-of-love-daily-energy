@@ -1,6 +1,7 @@
 # Soul of Love Daily Energy
 
 Production Candidate: `1.0.0-rc1`
+Production Status: Daily Energy v1.0 Gold Master Candidate
 
 ## Purpose
 
@@ -135,3 +136,12 @@ The Hero Artwork workflow and reading section structure can become the foundatio
 ## RC1 Notes
 
 Social PNG export is intentionally removed from the user-facing UI in RC1. The previous export preview needs a dedicated production rewrite before it returns.
+
+## Changelog
+
+2026-06-28
+- Final visual aura rendering polish
+- Reading Knowledge Engine refinement
+- Semantic QA added
+- AI Poster Prompt Generator stabilized
+- Production health report updated.

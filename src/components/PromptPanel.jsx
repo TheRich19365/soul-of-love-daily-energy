@@ -11,11 +11,11 @@ export function PromptPanel({ copiedPrompt, onCopyPrompt }) {
         </span>
         <div>
           <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Creative Output</p>
-          <h3 className="text-sm font-semibold uppercase tracking-[0.18em]">AI Artwork Prompt Generator</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-[0.18em]">AI Poster Prompt Generator</h3>
         </div>
       </div>
       <p className="mb-3 text-sm leading-6 text-slate-300">
-        Copy a complete external image prompt for a Soul of Love result card. It includes branding, aura color, score, card name, orientation, and the universe message.
+        Copy a complete external AI prompt to create a finished Soul of Love Daily Energy result poster. The poster should include Soul of Love branding, card name, aura color, energy score, orientation, and one short universe message.
       </p>
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
         {promptPlatforms.map((platform) => (

@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "qa:random-reading": "node scripts/qa-reading-random.mjs",
+    "qa:semantic": "node scripts/qa-semantic-intelligence.mjs",
     "preview": "next start"
   },
   "dependencies": {
