@@ -24,7 +24,7 @@ Use `.env.example` as the reference for local and deployment configuration. If `
 
 The GA4 loader sets `send_page_view: false` so the app-controlled `page_view` event remains the single source of truth.
 
-## Tracked Events
+## Active Events
 
 ### page_view
 
@@ -35,6 +35,10 @@ Collected fields:
 - module
 - path
 - timestamp
+
+Trigger:
+
+- App mount
 
 ### draw_card
 
@@ -51,6 +55,10 @@ Collected fields:
 - energy_score
 - timestamp
 
+Trigger:
+
+- User clicks the main draw/open card button
+
 ### copy_ai_poster_prompt
 
 Sent when a user copies an AI Poster Prompt.
@@ -59,9 +67,17 @@ Collected fields:
 
 - platform_name
 - card_id
+- card_name
+- card_name_th
 - aura
 - orientation
+- aspect
+- energy_score
 - timestamp
+
+Trigger:
+
+- User clicks one of the platform prompt copy buttons: Midjourney, ChatGPT Image, Flux, Stable Diffusion, or Gemini
 
 ### open_today_reading
 
@@ -78,14 +94,47 @@ Collected fields:
 - energy_score
 - timestamp
 
+Trigger:
+
+- Result area becomes visible after the card reveal finishes
+
 ### draw_again
 
 Sent when the user uses the Draw Again control from the result section.
 
 Collected fields:
 
-- previous_card_id
+- card_id
+- card_name
+- card_name_th
+- aura
+- orientation
+- aspect
+- energy_score
 - timestamp
+
+Trigger:
+
+- User clicks Draw Again from the Today's Reading section
+
+### reading_complete
+
+Sent when the user reaches the bottom of the visible reading result.
+
+Collected fields:
+
+- card_id
+- card_name
+- card_name_th
+- aura
+- orientation
+- aspect
+- energy_score
+- timestamp
+
+Trigger:
+
+- The bottom result panel enters the viewport. This fires once per reading instance.
 
 ## What Is Not Collected
 
@@ -126,6 +175,21 @@ When GA4 is configured, these tracked events are sent through `gtag()`:
 - `draw_again`
 - `open_today_reading`
 - `copy_ai_poster_prompt`
+- `reading_complete`
+
+## Future Planned Events
+
+These events are reserved for future interactions but are not currently fired because the matching UI does not exist in the production surface:
+
+- `copy_positive_prompt`
+- `copy_negative_prompt`
+- `copy_full_prompt`
+- `copy_suno_prompt`
+- `download_image`
+- `share_reading`
+- `favorite_card`
+
+They should be implemented only when the matching button or reliable user action exists.
 
 ## Future Dashboard Idea
 

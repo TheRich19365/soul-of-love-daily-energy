@@ -36,6 +36,8 @@ export default function App() {
   const [drawPhase, setDrawPhase] = useState("idle");
   const [copiedPrompt, setCopiedPrompt] = useState("");
   const trackedReadingOpenRef = useRef("");
+  const trackedReadingCompleteRef = useRef("");
+  const readingCompletionRef = useRef(null);
   const today = useThaiDate();
 
   useEffect(() => {
@@ -49,13 +51,28 @@ export default function App() {
     trackEvent("open_today_reading", getReadingAnalyticsPayload(reading));
   }, [drawPhase, hasDrawn, reading]);
 
+  useEffect(() => {
+    if (!hasDrawn || drawPhase !== "revealed" || !readingCompletionRef.current) return undefined;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting || trackedReadingCompleteRef.current === reading.id) return;
+
+        trackedReadingCompleteRef.current = reading.id;
+        trackEvent("reading_complete", getReadingAnalyticsPayload(reading));
+      },
+      { threshold: 0.6 }
+    );
+
+    observer.observe(readingCompletionRef.current);
+
+    return () => observer.disconnect();
+  }, [drawPhase, hasDrawn, reading]);
+
   function drawEnergy(source = "draw_card") {
     const nextReading = createReading();
     if (source === "draw_again") {
-      trackEvent("draw_again", {
-        previous_card_id: reading.card?.id,
-        timestamp: new Date().toISOString()
-      });
+      trackEvent("draw_again", getReadingAnalyticsPayload(reading));
     }
 
     setDrawPhase("shuffle");
@@ -74,10 +91,7 @@ export default function App() {
     await navigator.clipboard.writeText(prompt);
     trackEvent("copy_ai_poster_prompt", {
       platform_name: platform,
-      card_id: reading.card?.id,
-      aura: reading.aura?.name,
-      orientation: reading.orientation,
-      timestamp: new Date().toISOString()
+      ...getReadingAnalyticsPayload(reading)
     });
     setCopiedPrompt(platform);
     window.setTimeout(() => setCopiedPrompt(""), 1600);
@@ -148,7 +162,9 @@ export default function App() {
             <div className="lg:col-span-2">
               <PromptPanel copiedPrompt={copiedPrompt} onCopyPrompt={copyArtworkPrompt} />
             </div>
-            <ProductInfoPanel />
+            <div ref={readingCompletionRef} className="lg:col-span-2">
+              <ProductInfoPanel />
+            </div>
           </motion.section>
         )}
       </div>
