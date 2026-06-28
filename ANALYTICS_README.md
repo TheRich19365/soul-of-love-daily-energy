@@ -1,0 +1,122 @@
+# Daily Energy Analytics Foundation
+
+## Purpose
+
+Daily Energy includes a privacy-safe analytics foundation for understanding basic product usage without collecting personal identity.
+
+Analytics calls are routed through:
+
+```text
+src/lib/analytics.js
+```
+
+If no analytics provider is configured, the app continues to work normally. The utility safely no-ops unless a supported browser analytics object exists.
+
+## Tracked Events
+
+### page_view
+
+Sent when the Daily Energy module loads.
+
+Collected fields:
+
+- module
+- path
+- timestamp
+
+### draw_card
+
+Sent when a card draw generates a Daily Energy result.
+
+Collected fields:
+
+- card_id
+- card_name
+- card_name_th
+- aura
+- orientation
+- aspect
+- energy_score
+- timestamp
+
+### copy_ai_poster_prompt
+
+Sent when a user copies an AI Poster Prompt.
+
+Collected fields:
+
+- platform_name
+- card_id
+- aura
+- orientation
+- timestamp
+
+### open_today_reading
+
+Sent when the Today's Reading section becomes visible after a draw.
+
+Collected fields:
+
+- card_id
+- card_name
+- card_name_th
+- aura
+- orientation
+- aspect
+- energy_score
+- timestamp
+
+### draw_again
+
+Sent when the user uses the Draw Again control from the result section.
+
+Collected fields:
+
+- previous_card_id
+- timestamp
+
+## What Is Not Collected
+
+The app does not intentionally collect:
+
+- name
+- email
+- phone number
+- personal identity
+- birth data
+- exact location
+- free-form user text
+- account identifiers
+
+Some external analytics providers may automatically process technical metadata such as browser, device, coarse location, or IP address depending on their configuration. That behavior should be controlled in the provider dashboard and privacy settings.
+
+## Supported Provider Hooks
+
+The foundation currently supports safe calls to common browser globals if present:
+
+- `window.dataLayer`
+- `window.gtag`
+- `window.plausible`
+- `window.posthog`
+
+It also dispatches a local browser event:
+
+```text
+soul-of-love:analytics
+```
+
+This can be used later for debugging, custom dashboards, or a first-party analytics bridge.
+
+## Future Dashboard Idea
+
+Future internal dashboards can summarize:
+
+- most drawn Major Arcana cards
+- aura distribution
+- Light vs Shadow orientation ratio
+- average energy score
+- AI prompt copy platform usage
+- daily draw volume
+- repeat draw behavior
+
+The dashboard should remain aggregate-first and avoid storing personal user identity unless a future platform account system is intentionally designed with consent and privacy controls.

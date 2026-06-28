@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Heart,
@@ -10,6 +10,7 @@ import {
   Wand2
 } from "lucide-react";
 import { createReading } from "./lib/createReading.js";
+import { getReadingAnalyticsPayload, trackEvent, trackPageView } from "./lib/analytics.js";
 import { buildPrompt } from "./promptEngine/buildPrompt.js";
 import { DailyDraw } from "./components/HeroCard.jsx";
 import { DailySummary, DailyInsights, ProductInfoPanel, ReadingSectionHeader } from "./components/ReadingSection.jsx";
@@ -34,16 +35,36 @@ export default function App() {
   const [hasDrawn, setHasDrawn] = useState(false);
   const [drawPhase, setDrawPhase] = useState("idle");
   const [copiedPrompt, setCopiedPrompt] = useState("");
+  const trackedReadingOpenRef = useRef("");
   const today = useThaiDate();
 
-  function drawEnergy() {
+  useEffect(() => {
+    trackPageView({ module: "daily_energy" });
+  }, []);
+
+  useEffect(() => {
+    if (!hasDrawn || drawPhase !== "revealed" || trackedReadingOpenRef.current === reading.id) return;
+
+    trackedReadingOpenRef.current = reading.id;
+    trackEvent("open_today_reading", getReadingAnalyticsPayload(reading));
+  }, [drawPhase, hasDrawn, reading]);
+
+  function drawEnergy(source = "draw_card") {
     const nextReading = createReading();
+    if (source === "draw_again") {
+      trackEvent("draw_again", {
+        previous_card_id: reading.card?.id,
+        timestamp: new Date().toISOString()
+      });
+    }
+
     setDrawPhase("shuffle");
     window.setTimeout(() => setDrawPhase("rise"), 900);
     window.setTimeout(() => {
       setReading(nextReading);
       setHasDrawn(true);
       setDrawPhase("flip");
+      trackEvent("draw_card", getReadingAnalyticsPayload(nextReading));
     }, 1450);
     window.setTimeout(() => setDrawPhase("revealed"), 2100);
   }
@@ -51,6 +72,13 @@ export default function App() {
   async function copyArtworkPrompt(platform) {
     const prompt = buildPrompt({ reading, platform, compositionType: "Social Poster" });
     await navigator.clipboard.writeText(prompt);
+    trackEvent("copy_ai_poster_prompt", {
+      platform_name: platform,
+      card_id: reading.card?.id,
+      aura: reading.aura?.name,
+      orientation: reading.orientation,
+      timestamp: new Date().toISOString()
+    });
     setCopiedPrompt(platform);
     window.setTimeout(() => setCopiedPrompt(""), 1600);
   }
@@ -95,7 +123,7 @@ export default function App() {
 
             <button
               type="button"
-              onClick={drawEnergy}
+              onClick={() => drawEnergy("draw_card")}
               disabled={drawPhase !== "idle" && drawPhase !== "revealed"}
               className="group inline-flex w-full items-center justify-center gap-3 rounded-2xl border border-amber-200/40 bg-gradient-to-r from-amber-200 via-violet-200 to-sky-200 px-5 py-4 text-sm font-bold uppercase tracking-[0.12em] text-slate-950 shadow-[0_0_42px_rgba(248,199,107,.25)] transition duration-300 hover:scale-[1.01] hover:shadow-[0_0_64px_rgba(168,85,247,.42)] disabled:cursor-wait disabled:opacity-80 sm:w-auto"
             >
@@ -114,7 +142,7 @@ export default function App() {
             animate="show"
             className="grid gap-6 pb-24 lg:grid-cols-[.9fr_1.1fr] lg:pb-10"
           >
-            <ReadingSectionHeader onDraw={drawEnergy} disabled={drawPhase !== "idle" && drawPhase !== "revealed"} />
+            <ReadingSectionHeader onDraw={() => drawEnergy("draw_again")} disabled={drawPhase !== "idle" && drawPhase !== "revealed"} />
             <DailySummary reading={reading} />
             <DailyInsights reading={reading} />
             <div className="lg:col-span-2">
