@@ -12,6 +12,18 @@ src/lib/analytics.js
 
 If no analytics provider is configured, the app continues to work normally. The utility safely no-ops unless a supported browser analytics object exists.
 
+## GA4 Setup
+
+Google Analytics 4 is loaded globally through the Next.js `Script` component when this environment variable exists:
+
+```text
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-1NY8070518
+```
+
+Use `.env.example` as the reference for local and deployment configuration. If `NEXT_PUBLIC_GA_MEASUREMENT_ID` is missing, no GA4 script is loaded and the app continues normally.
+
+The GA4 loader sets `send_page_view: false` so the app-controlled `page_view` event remains the single source of truth.
+
 ## Tracked Events
 
 ### page_view
@@ -106,6 +118,14 @@ soul-of-love:analytics
 ```
 
 This can be used later for debugging, custom dashboards, or a first-party analytics bridge.
+
+When GA4 is configured, these tracked events are sent through `gtag()`:
+
+- `page_view`
+- `draw_card`
+- `draw_again`
+- `open_today_reading`
+- `copy_ai_poster_prompt`
 
 ## Future Dashboard Idea
 

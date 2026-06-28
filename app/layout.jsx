@@ -1,3 +1,4 @@
+import Script from "next/script";
 import "../src/index.css";
 
 export const metadata = {
@@ -12,9 +13,30 @@ export const viewport = {
 };
 
 export default function RootLayout({ children }) {
+  const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {gaMeasurementId ? (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga4-init" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                window.gtag = gtag;
+                gtag('js', new Date());
+                gtag('config', '${gaMeasurementId}', { send_page_view: false });
+              `}
+            </Script>
+          </>
+        ) : null}
+        {children}
+      </body>
     </html>
   );
 }
