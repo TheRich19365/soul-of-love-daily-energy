@@ -3,8 +3,10 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
+  Activity,
   Heart,
   Moon,
+  Orbit,
   Sparkles,
   Sun,
   Wand2
@@ -15,6 +17,7 @@ import { buildPrompt } from "./promptEngine/buildPrompt.js";
 import { DailyDraw } from "./components/HeroCard.jsx";
 import { DailySummary, DailyInsights, ProductInfoPanel, ReadingSectionHeader } from "./components/ReadingSection.jsx";
 import { PromptPanel } from "./components/PromptPanel.jsx";
+import { EcosystemFooter, HeaderContactNav } from "./components/ContactAccess.jsx";
 import { SignalPill } from "./components/common/SoulUI.jsx";
 import { modes, navItems, revealContainer } from "./platform/config/uiConstants.js";
 
@@ -167,6 +170,10 @@ export default function App() {
             </div>
           </motion.section>
         )}
+
+        {!hasDrawn && <PreDrawAnchorPanels onDraw={() => drawEnergy("draw_card")} disabled={drawPhase !== "idle" && drawPhase !== "revealed"} />}
+
+        <EcosystemFooter />
       </div>
 
       <MobileNav />
@@ -192,7 +199,7 @@ function CosmicBackdrop({ aura }) {
 
 function TopBar() {
   return (
-    <header className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.055] px-3 py-3 backdrop-blur-2xl">
+    <header className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.055] px-3 py-3 backdrop-blur-2xl xl:flex-row xl:items-center xl:justify-between">
       <div className="flex items-center gap-3">
         <div className="grid h-10 w-10 place-items-center rounded-xl border border-amber-200/30 bg-amber-200/10 shadow-[0_0_24px_rgba(248,199,107,.2)]">
           <Heart className="h-5 w-5 text-amber-100" />
@@ -202,19 +209,80 @@ function TopBar() {
           <p className="mt-1 text-xs text-slate-400">Daily Energy Tarot</p>
         </div>
       </div>
-      <nav className="hidden items-center gap-1 rounded-xl border border-white/10 bg-slate-950/35 p-1 lg:flex">
-        {navItems.map(({ href, label, icon: Icon }) => (
-          <a
-            key={label}
-            href={href}
-            className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
-          >
-            <Icon className="h-3.5 w-3.5" />
-            {label}
-          </a>
-        ))}
-      </nav>
+      <div className="flex w-full flex-col gap-2 lg:w-auto lg:flex-row lg:items-center lg:justify-end">
+        <nav className="hidden items-center gap-1 rounded-xl border border-white/10 bg-slate-950/35 p-1 lg:flex" aria-label="Daily Energy page navigation">
+          {navItems.map(({ href, label, icon: Icon }) => (
+            <a
+              key={label}
+              href={href}
+              className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-slate-300 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-100"
+            >
+              <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+              {label}
+            </a>
+          ))}
+        </nav>
+        <HeaderContactNav />
+      </div>
     </header>
+  );
+}
+
+function PreDrawAnchorPanels({ onDraw, disabled }) {
+  const sections = [
+    {
+      id: "energy-status",
+      icon: Activity,
+      eyebrow: "Daily Energy",
+      title: "พลังงานและออร่าจะปรากฏหลังเปิดไพ่",
+      body: "ส่วนนี้จะสรุปคะแนนพลังงาน สีออร่า สถานะไพ่ และสภาวะอารมณ์ของวัน โดยยังคงใช้ระบบอ่านเดิมทั้งหมด"
+    },
+    {
+      id: "soul-message",
+      icon: Orbit,
+      eyebrow: "Today's Reading",
+      title: "ข้อความจากจักรวาลรออยู่หลังการเปิดไพ่",
+      body: "หลังเปิดไพ่ ระบบจะแสดง Universe Message, Love, Work, Money, Focus, Warning, Affirmation และ Mission ตามผลลัพธ์จริงของวัน"
+    },
+    {
+      id: "prompt-studio",
+      icon: Sparkles,
+      eyebrow: "Creative Output",
+      title: "AI Poster Prompt Generator",
+      body: "Prompt สำหรับสร้างโปสเตอร์ผลลัพธ์จะเปิดใช้งานหลังจากมีผล Daily Energy แล้ว เพื่อให้ข้อมูลไพ่ ออร่า และข้อความตรงกับการอ่านจริง"
+    }
+  ];
+
+  return (
+    <section className="grid gap-4 pb-10 lg:grid-cols-3" aria-label="Daily Energy sections preview">
+      {sections.map(({ id, icon: Icon, eyebrow, title, body }) => (
+        <article
+          key={id}
+          id={id}
+          className="rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-4 text-slate-300 shadow-[0_0_34px_rgba(109,40,217,.1)] backdrop-blur-2xl"
+        >
+          <div className="mb-3 flex items-center gap-2 text-amber-100">
+            <span className="grid h-9 w-9 place-items-center rounded-xl border border-amber-200/20 bg-amber-200/10">
+              <Icon className="h-4 w-4" aria-hidden="true" />
+            </span>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">{eyebrow}</p>
+          </div>
+          <h2 className="text-base font-semibold text-white">{title}</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-300">{body}</p>
+        </article>
+      ))}
+      <div className="lg:col-span-3">
+        <button
+          type="button"
+          onClick={onDraw}
+          disabled={disabled}
+          className="inline-flex w-full items-center justify-center gap-3 rounded-2xl border border-amber-200/35 bg-amber-200/12 px-4 py-3 text-xs font-bold uppercase tracking-[0.14em] text-amber-100 transition hover:bg-amber-200/18 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-100 disabled:cursor-wait disabled:opacity-70 sm:w-auto"
+        >
+          <Wand2 className="h-4 w-4" aria-hidden="true" />
+          เปิดไพ่พลังงานวันนี้
+        </button>
+      </div>
+    </section>
   );
 }
 
