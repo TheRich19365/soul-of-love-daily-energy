@@ -36,3 +36,13 @@ html {
 .perspective-1000 {
   perspective: 1000px;
 }
+
+@layer components {
+  .wisdom-input {
+    @apply w-full rounded-2xl border border-white/10 bg-slate-950/45 px-4 py-3 text-sm text-white placeholder:text-slate-500 outline-none transition;
+  }
+
+  .wisdom-input:focus {
+    @apply border-cyan-200/45 bg-slate-950/65 ring-2 ring-cyan-200/20;
+  }
+}

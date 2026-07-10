@@ -1,5 +1,6 @@
 import {
   ArrowUpRight,
+  CalendarDays,
   Facebook,
   Instagram,
   Mail,
@@ -11,6 +12,7 @@ import {
 import { contactLinks, externalLinkProps } from "../data/contactLinks.js";
 
 const headerLinks = [
+  { key: "thaiWisdom", label: "ฤกษ์ดี", icon: CalendarDays, style: "secondary", internalHref: "/thai-wisdom" },
   { key: "portfolio", label: "กลับ Portfolio Hub", icon: ArrowUpRight, style: "secondary" },
   { key: "lineOa", label: "LINE OA", icon: MessageCircle, style: "primary" },
   { key: "email", label: "Email / Contact", icon: Mail, style: "secondary", useMailto: true }
@@ -28,10 +30,12 @@ const footerLinks = [
 ];
 
 function getHref(link, config) {
+  if (link.internalHref) return link.internalHref;
   return link.useMailto ? config.mailto : config.url;
 }
 
 function linkSafetyProps(link) {
+  if (link.internalHref) return {};
   return link.useMailto ? {} : externalLinkProps;
 }
 
@@ -39,7 +43,7 @@ export function HeaderContactNav() {
   return (
     <nav className="flex w-full flex-wrap items-center justify-start gap-2 sm:w-auto sm:justify-end" aria-label="Soul of Love contact navigation">
       {headerLinks.map((link) => {
-        const config = contactLinks[link.key];
+        const config = link.internalHref ? { label: link.label, enabled: true } : contactLinks[link.key];
         if (!config?.enabled) return null;
 
         const Icon = link.icon;
