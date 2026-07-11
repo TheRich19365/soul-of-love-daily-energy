@@ -32,14 +32,22 @@ function ThaiWisdomTopNav() {
       </div>
       <nav className="flex flex-wrap items-center gap-2" aria-label="Thai Wisdom navigation">
         <a
-          href="/"
+          href={contactLinks.dailyEnergy.localHref}
           className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.045] px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-300 transition hover:border-amber-200/30 hover:bg-white/[0.08] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-100"
         >
           <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
           กลับ Daily Energy
         </a>
         <a
-          href={contactLinks.portfolio.url}
+          href={contactLinks.matrix9.url}
+          {...externalLinkProps}
+          className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.045] px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-300 transition hover:border-amber-200/30 hover:bg-white/[0.08] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-100"
+        >
+          Matrix 9
+          <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+        </a>
+        <a
+          href={contactLinks.portfolioHub.url}
           {...externalLinkProps}
           className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.045] px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-300 transition hover:border-amber-200/30 hover:bg-white/[0.08] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-100"
         >
@@ -47,10 +55,10 @@ function ThaiWisdomTopNav() {
           <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
         </a>
         <a
-          href={contactLinks.lineOa.url}
+          href={contactLinks.lineOA.url}
           {...externalLinkProps}
           className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-emerald-200/35 bg-emerald-200/12 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-emerald-100 shadow-[0_0_28px_rgba(52,211,153,.14)] transition hover:bg-emerald-200/18 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-100"
-          aria-label={`เปิด ${contactLinks.lineOa.label} ${contactLinks.lineOa.id}`}
+          aria-label={`เปิด ${contactLinks.lineOA.label} ${contactLinks.lineOA.id}`}
         >
           <MessageCircle className="h-3.5 w-3.5" aria-hidden="true" />
           LINE OA

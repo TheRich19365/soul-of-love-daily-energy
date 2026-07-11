@@ -5,3 +5,5 @@ dist
 matrix9-interface
 *.log
 *.zip
+.vercel
+.env*

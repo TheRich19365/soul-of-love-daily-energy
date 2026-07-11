@@ -1,3 +1,4 @@
+const emailAddress = "Souloflove19365@gmail.com";
 const issueSubject = "แจ้งปัญหาการใช้งาน Soul of Love Daily Energy";
 const issueBody = `สวัสดีครับ Win Soul of Love
 
@@ -16,30 +17,60 @@ function createMailto(address, subject, body) {
   return `mailto:${address}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
+const portfolioHub = {
+  label: "Portfolio Hub",
+  url: "https://win-soul-of-love-portfolio-hub.vercel.app",
+  enabled: true
+};
+
+const dailyEnergy = {
+  label: "Daily Energy",
+  url: "https://soul-of-love-daily-energy.vercel.app",
+  localHref: "/",
+  enabled: true
+};
+
+const thaiWisdom = {
+  label: "ฤกษ์ดี",
+  englishLabel: "Thai Wisdom",
+  url: "https://soul-of-love-daily-energy.vercel.app/thai-wisdom",
+  localHref: "/thai-wisdom",
+  enabled: true
+};
+
+const matrix9 = {
+  label: "Matrix 9",
+  url: "https://matrix9-interface.vercel.app",
+  enabled: true
+};
+
+const lineOA = {
+  label: "LINE OA",
+  id: "@514wppkc",
+  url: "https://line.me/R/ti/p/%40514wppkc",
+  enabled: true
+};
+
+const email = {
+  label: "Email / Contact",
+  address: emailAddress,
+  mailto: `mailto:${emailAddress}`,
+  issueMailto: createMailto(emailAddress, issueSubject, issueBody),
+  enabled: true
+};
+
 export const contactLinks = {
-  portfolio: {
-    label: "Portfolio Hub",
-    url: "https://win-soul-of-love-portfolio-hub.vercel.app",
-    enabled: true
-  },
-  lineOa: {
-    label: "LINE Official",
-    id: "@514wppkc",
-    url: "https://line.me/R/ti/p/%40514wppkc",
-    enabled: true
-  },
-  email: {
-    label: "Email / Contact",
-    address: "Souloflove19365@gmail.com",
-    mailto: "mailto:Souloflove19365@gmail.com",
-    issueMailto: createMailto("Souloflove19365@gmail.com", issueSubject, issueBody),
-    enabled: true
-  },
-  matrix9: {
-    label: "Matrix 9 Interface",
-    url: "https://matrix9-interface.vercel.app",
-    enabled: true
-  },
+  portfolioHub,
+  dailyEnergy,
+  thaiWisdom,
+  matrix9,
+  lineOA,
+  email,
+
+  // Backward-compatible aliases used by existing components.
+  portfolio: portfolioHub,
+  lineOa: lineOA,
+
   youtube: {
     label: "YouTube Music",
     url: "https://www.youtube.com/@SourceSignalMusic",

@@ -12,17 +12,19 @@ import {
 import { contactLinks, externalLinkProps } from "../data/contactLinks.js";
 
 const headerLinks = [
-  { key: "thaiWisdom", label: "ฤกษ์ดี", icon: CalendarDays, style: "secondary", internalHref: "/thai-wisdom" },
-  { key: "portfolio", label: "กลับ Portfolio Hub", icon: ArrowUpRight, style: "secondary" },
-  { key: "lineOa", label: "LINE OA", icon: MessageCircle, style: "primary" },
-  { key: "email", label: "Email / Contact", icon: Mail, style: "secondary", useMailto: true }
+  { key: "portfolioHub", label: "Portfolio Hub", icon: ArrowUpRight, style: "secondary" },
+  { key: "matrix9", label: "Matrix 9", icon: Sparkles, style: "secondary" },
+  { key: "thaiWisdom", label: "ฤกษ์ดี", icon: CalendarDays, style: "secondary", useLocalHref: true },
+  { key: "lineOA", label: "LINE OA", icon: MessageCircle, style: "primary" }
 ];
 
 const footerLinks = [
-  { key: "portfolio", icon: ArrowUpRight },
-  { key: "lineOa", icon: MessageCircle, value: contactLinks.lineOa.id, primary: true },
-  { key: "email", icon: Mail, useMailto: true, value: contactLinks.email.address },
+  { key: "portfolioHub", icon: ArrowUpRight },
+  { key: "dailyEnergy", icon: Sparkles, useLocalHref: true },
+  { key: "thaiWisdom", icon: CalendarDays, useLocalHref: true },
   { key: "matrix9", icon: Sparkles },
+  { key: "lineOA", icon: MessageCircle, value: contactLinks.lineOA.id, primary: true },
+  { key: "email", icon: Mail, useMailto: true, value: contactLinks.email.address },
   { key: "facebook", icon: Facebook },
   { key: "instagram", icon: Instagram, value: contactLinks.instagram.handle },
   { key: "youtube", icon: Music2 },
@@ -30,12 +32,12 @@ const footerLinks = [
 ];
 
 function getHref(link, config) {
-  if (link.internalHref) return link.internalHref;
+  if (link.useLocalHref) return config.localHref || config.url;
   return link.useMailto ? config.mailto : config.url;
 }
 
 function linkSafetyProps(link) {
-  if (link.internalHref) return {};
+  if (link.useLocalHref) return {};
   return link.useMailto ? {} : externalLinkProps;
 }
 
@@ -43,7 +45,7 @@ export function HeaderContactNav() {
   return (
     <nav className="flex w-full flex-wrap items-center justify-start gap-2 sm:w-auto sm:justify-end" aria-label="Soul of Love contact navigation">
       {headerLinks.map((link) => {
-        const config = link.internalHref ? { label: link.label, enabled: true } : contactLinks[link.key];
+        const config = contactLinks[link.key];
         if (!config?.enabled) return null;
 
         const Icon = link.icon;
@@ -54,7 +56,7 @@ export function HeaderContactNav() {
             key={link.key}
             href={getHref(link, config)}
             {...linkSafetyProps(link)}
-            aria-label={link.key === "lineOa" ? `เปิด ${config.label} ${config.id}` : config.label}
+            aria-label={link.key === "lineOA" ? `เปิด ${config.label} ${config.id}` : config.label}
             className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-100 ${
               isPrimary
                 ? "border-emerald-200/35 bg-emerald-200/12 text-emerald-100 shadow-[0_0_28px_rgba(52,211,153,.14)] hover:bg-emerald-200/18"
@@ -108,7 +110,7 @@ export function EcosystemFooter() {
                     ? "border-emerald-200/30 bg-emerald-200/10 text-emerald-100 hover:bg-emerald-200/16"
                     : "border-white/10 bg-slate-950/35 text-slate-300 hover:border-amber-200/30 hover:bg-white/[0.075] hover:text-white"
                 }`}
-                aria-label={link.key === "lineOa" ? `เปิด ${config.label} ${config.id}` : config.label}
+                aria-label={link.key === "lineOA" ? `เปิด ${config.label} ${config.id}` : config.label}
               >
                 <span className="flex items-center gap-2 text-sm font-semibold">
                   <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
