@@ -15,20 +15,25 @@ import {
   futureEngineRoadmap,
   knowledgeAccordions,
   lockedDeepWisdomCards,
-  personalPreviewPools,
+  personalTopicGuidance,
+  personalTopics,
   sourceTraceDefinitions,
   timingWindows,
+  topicLockedLayer,
   weekdayGuidance
 } from "../data/thaiWisdomData.js";
 
-function reduceNumber(value) {
-  const digits = String(value || "").replace(/\D/g, "");
-  if (!digits) return 0;
-  let total = [...digits].reduce((sum, digit) => sum + Number(digit), 0);
-  while (total > 9) {
-    total = String(total).split("").reduce((sum, digit) => sum + Number(digit), 0);
-  }
-  return total || 9;
+function getLocalDateInputValue(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function parseSelectedDate(selectedDate) {
+  if (!selectedDate) return new Date();
+  const date = new Date(`${selectedDate}T12:00:00`);
+  return Number.isNaN(date.getTime()) ? new Date() : date;
 }
 
 function normalizeYear(year, yearType) {
@@ -47,25 +52,30 @@ function isValidBirthDate(day, month, year, yearType) {
   return date.getFullYear() === adYear && date.getMonth() === numericMonth - 1 && date.getDate() === numericDay;
 }
 
-function getLocalDateInputValue(date = new Date()) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+function deterministicHash(value) {
+  let hash = 2166136261;
+  for (const char of String(value)) {
+    hash ^= char.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return Math.abs(hash >>> 0);
 }
 
-function parseSelectedDate(selectedDate) {
-  if (!selectedDate) return new Date();
-  const date = new Date(`${selectedDate}T12:00:00`);
-  return Number.isNaN(date.getTime()) ? new Date() : date;
+function pickStable(items, seed, salt = "") {
+  if (!items?.length) return "";
+  return items[deterministicHash(`${seed}:${salt}`) % items.length];
 }
 
-function getTodaySnapshot(selectedDate) {
-  const now = parseSelectedDate(selectedDate);
-  const dayIndex = now.getDay();
+function getTopic(topicId) {
+  return personalTopics.find((topic) => topic.id === topicId) || personalTopics[0];
+}
+
+function getPublicSnapshot(selectedDate) {
+  const date = parseSelectedDate(selectedDate);
+  const dayIndex = date.getDay();
   const guidance = weekdayGuidance[dayIndex];
-  const level = auspiciousLevels[(now.getDate() + dayIndex) % auspiciousLevels.length];
-  const dateLabel = now.toLocaleDateString("th-TH", {
+  const level = auspiciousLevels[(date.getDate() + dayIndex) % auspiciousLevels.length];
+  const dateLabel = date.toLocaleDateString("th-TH", {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -77,23 +87,40 @@ function getTodaySnapshot(selectedDate) {
 
 function createPersonalPreview(form, selectedDate) {
   const adYear = normalizeYear(form.year, form.yearType);
-  const targetDate = parseSelectedDate(selectedDate);
-  const seed = reduceNumber(`${getLocalDateInputValue(targetDate)}${form.day}${form.month}${adYear}${form.question.length}`);
-  const preview = personalPreviewPools[seed % personalPreviewPools.length];
-  const questionTone = form.question.trim()
-    ? `คำถามของคุณพาโฟกัสไปที่ “${form.question.trim()}” จึงเหมาะกับการดูจังหวะอย่างใจเย็นก่อนตอบสนอง`
-    : "วันนี้เหมาะกับการเลือกคำถามหลักเพียงหนึ่งเรื่อง เพื่อให้พลังไม่กระจายเกินไป";
+  const topic = getTopic(form.topic);
+  const guidance = personalTopicGuidance[topic.id];
+  const normalizedBirthDate = `${adYear}-${String(Number(form.month)).padStart(2, "0")}-${String(Number(form.day)).padStart(2, "0")}`;
+  const seed = `${normalizedBirthDate}|${selectedDate}|${topic.id}`;
+  const lockedNotes = topicLockedLayer[topic.id] || [];
 
   return {
+    id: deterministicHash(seed),
+    generatedAt: new Date().toISOString(),
+    topic,
     seed,
-    questionTone,
-    ...preview
+    inputs: {
+      name: form.name.trim(),
+      birthDay: form.day,
+      birthMonth: form.month,
+      birthYear: form.year,
+      normalizedBirthYear: adYear,
+      normalizedBirthDate,
+      yearType: form.yearType,
+      selectedDate,
+      context: form.context.trim()
+    },
+    openedEnergy: pickStable(guidance.openedEnergy, seed, "open"),
+    caution: pickStable(guidance.cautions, seed, "caution"),
+    timingAdvice: pickStable(guidance.timingAdvice, seed, "timing"),
+    actionAdvice: pickStable(guidance.actionAdvice, seed, "action"),
+    reflectionQuestion: pickStable(guidance.reflectionQuestions, seed, "reflection"),
+    lockedNote: pickStable(lockedNotes.length ? lockedNotes : guidance.lockedNotes, seed, "locked")
   };
 }
 
 export function ThaiWisdomSection() {
   const [selectedDate, setSelectedDate] = useState(() => getLocalDateInputValue());
-  const snapshot = useMemo(() => getTodaySnapshot(selectedDate), [selectedDate]);
+  const snapshot = useMemo(() => getPublicSnapshot(selectedDate), [selectedDate]);
   const [openNote, setOpenNote] = useState(0);
   const [form, setForm] = useState({
     name: "",
@@ -101,7 +128,8 @@ export function ThaiWisdomSection() {
     month: "",
     year: "",
     yearType: "BE",
-    question: ""
+    topic: "daily",
+    context: ""
   });
   const [error, setError] = useState("");
   const [preview, setPreview] = useState(null);
@@ -109,6 +137,12 @@ export function ThaiWisdomSection() {
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
     setError("");
+    if (field !== "context") setPreview(null);
+  }
+
+  function updateSelectedDate(value) {
+    setSelectedDate(value);
+    setPreview(null);
   }
 
   function handleSubmit(event) {
@@ -116,7 +150,7 @@ export function ThaiWisdomSection() {
 
     if (!isValidBirthDate(form.day, form.month, form.year, form.yearType)) {
       setPreview(null);
-      setError("กรุณากรอกวันเดือนปีเกิดให้ถูกต้องก่อนสร้าง Personal Snapshot");
+      setError("กรุณากรอกวันเดือนปีเกิดให้ถูกต้องก่อนสร้างพรีวิวเบื้องต้น");
       return;
     }
 
@@ -127,19 +161,19 @@ export function ThaiWisdomSection() {
     <section id="thai-wisdom" className="space-y-5 py-8" aria-labelledby="thai-wisdom-title">
       <ThaiWisdomHero />
       <div className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
-        <TodaySnapshot snapshot={snapshot} selectedDate={selectedDate} onDateChange={setSelectedDate} />
+        <TodaySnapshot snapshot={snapshot} selectedDate={selectedDate} onDateChange={updateSelectedDate} />
         <TimingWindows />
       </div>
       <div className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
         <PersonalSnapshotForm form={form} error={error} preview={preview} onChange={updateField} onSubmit={handleSubmit} />
-        <LockedWisdomLayer />
+        <LockedWisdomLayer topic={preview?.topic || getTopic(form.topic)} />
       </div>
       <KnowledgeNotes openNote={openNote} onToggle={setOpenNote} />
-      <SourceTrace />
+      <SourceTrace preview={preview} selectedDate={selectedDate} selectedTopic={getTopic(form.topic)} />
       <FutureEngineRoadmap />
       <DeepTalkCta />
       <p className="rounded-[1.25rem] border border-white/10 bg-slate-950/35 p-4 text-sm leading-6 text-slate-400">
-        เนื้อหานี้เป็นการเรียบเรียงเชิงสัญลักษณ์เพื่อการสะท้อนตนเอง ไม่ใช่การคัดลอกตำรา และไม่ใช่คำทำนายตายตัว
+        เนื้อหาในหน้านี้เป็นการเรียบเรียงเชิงสัญลักษณ์ ไม่ใช่การคัดลอกตำรา ผลชั้นลึกจากตำราไทย/พรหมชาติ/โหราศาสตร์ไทยจะใช้เป็นฐานประกอบการสนทนาเท่านั้น
       </p>
     </section>
   );
@@ -169,7 +203,7 @@ function ThaiWisdomHero() {
         </div>
         <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-4 text-sm text-slate-300">
           <p className="text-xs uppercase tracking-[0.2em] text-cyan-100">Positioning</p>
-          <p className="mt-2 leading-6">ฤกษ์ดีแบบเข้าใจง่าย · ใช้ได้จริงในชีวิตประจำวัน · ใช้เป็นแนวทางประกอบการตัดสินใจ</p>
+          <p className="mt-2 leading-6">เลือกหัวข้อแบบล็อก · คำนวณจากวันเกิดและวันที่เลือก · ไม่ใช้ข้อความอิสระเป็น seed</p>
         </div>
       </div>
     </article>
@@ -278,39 +312,76 @@ function PersonalSnapshotForm({ form, error, preview, onChange, onSubmit }) {
             <option value="AD">ค.ศ.</option>
           </select>
         </div>
+
+        <fieldset className="rounded-2xl border border-white/10 bg-slate-950/35 p-3">
+          <legend className="px-1 text-xs uppercase tracking-[0.18em] text-slate-400">หัวข้อที่ต้องการดู</legend>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {personalTopics.map((topic) => {
+              const active = form.topic === topic.id;
+              return (
+                <button
+                  key={topic.id}
+                  type="button"
+                  onClick={() => onChange("topic", topic.id)}
+                  className={`min-h-11 rounded-2xl border px-3 py-2 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100 ${
+                    active
+                      ? "border-cyan-200/45 bg-cyan-200/14 text-cyan-100 shadow-[0_0_24px_rgba(34,211,238,.14)]"
+                      : "border-white/10 bg-white/[0.04] text-slate-300 hover:border-amber-200/30 hover:text-white"
+                  }`}
+                  aria-pressed={active}
+                >
+                  {topic.label}
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
+
         <textarea
           className="wisdom-input min-h-24 resize-y"
-          value={form.question}
-          onChange={(event) => onChange("question", event.target.value)}
-          placeholder="คำถามหลักของวันนี้"
+          value={form.context}
+          onChange={(event) => onChange("context", event.target.value)}
+          placeholder="บริบทเพิ่มเติม (ไม่บังคับ) เช่น กำลังตัดสินใจเรื่องงาน / รายรับเดือนนี้ / ความสัมพันธ์ที่ยังไม่ชัดเจน"
         />
+        <p className="text-xs leading-5 text-slate-500">บริบทนี้ใช้เป็น note อ่อน ๆ เท่านั้น ไม่เปลี่ยน seed หลักของผลลัพธ์</p>
         {error ? <p className="rounded-xl border border-rose-200/20 bg-rose-200/10 px-3 py-2 text-sm text-rose-100">{error}</p> : null}
         <button
           type="submit"
           className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-cyan-200/30 bg-cyan-200/10 px-4 py-3 text-xs font-bold uppercase tracking-[0.14em] text-cyan-100 transition hover:bg-cyan-200/16 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100"
         >
           <Sparkles className="h-4 w-4" aria-hidden="true" />
-          สร้าง Free Personalized Preview
+          สร้างพรีวิวเบื้องต้น
         </button>
+        <p className="text-xs leading-5 text-slate-500">ผลนี้เป็นเพียงชั้นเปิด ไม่ใช่คำทำนายตายตัว</p>
       </form>
-      {preview ? <PersonalPreview preview={preview} name={form.name} /> : null}
+      {preview ? <PersonalPreview preview={preview} /> : null}
       <p className="mt-3 text-xs leading-5 text-slate-500">ข้อมูลนี้ประมวลผลในเบราว์เซอร์เท่านั้น ไม่มี backend และไม่ส่งออกไปเก็บบน server</p>
     </article>
   );
 }
 
-function PersonalPreview({ preview, name }) {
+function PersonalPreview({ preview }) {
   const rows = [
-    ["พลังที่เปิดในวันนี้", preview.open],
+    ["พลังที่เปิดในหัวข้อนี้", preview.openedEnergy],
     ["จุดที่ควรระวัง", preview.caution],
-    ["คำแนะนำสั้น ๆ", preview.advice],
-    ["คำถามสะท้อนตัวเอง", preview.question]
+    ["จังหวะที่เหมาะกับการลงมือ", preview.timingAdvice],
+    ["คำแนะนำเชิงปฏิบัติ", preview.actionAdvice],
+    ["คำถามสะท้อนตัวเอง", preview.reflectionQuestion],
+    ["ชั้นลึกที่ยังล็อกไว้", preview.lockedNote]
   ];
+  const titleName = preview.inputs.name ? ` · ${preview.inputs.name}` : "";
 
   return (
     <div className="mt-5 rounded-[1.25rem] border border-cyan-200/20 bg-cyan-200/10 p-4">
-      <p className="text-sm font-semibold text-cyan-100">{name ? `Personal Preview · ${name}` : "Personal Preview"}</p>
-      <p className="mt-2 text-sm leading-6 text-slate-200">{preview.questionTone}</p>
+      <p className="text-sm font-semibold text-cyan-100">Personal Preview · {preview.topic.label}{titleName}</p>
+      <p className="mt-2 text-xs leading-5 text-slate-400">
+        คำนวณจาก {preview.inputs.normalizedBirthDate} · วันที่เลือก {preview.inputs.selectedDate} · หัวข้อ {preview.topic.label}
+      </p>
+      {preview.inputs.context ? (
+        <p className="mt-3 rounded-2xl border border-white/10 bg-slate-950/35 p-3 text-sm leading-6 text-slate-300">
+          บริบทเพิ่มเติม: {preview.inputs.context}
+        </p>
+      ) : null}
       <div className="mt-4 grid gap-3">
         {rows.map(([label, value]) => (
           <div key={label} className="rounded-2xl border border-white/10 bg-slate-950/35 p-3">
@@ -323,20 +394,29 @@ function PersonalPreview({ preview, name }) {
   );
 }
 
-function LockedWisdomLayer() {
+function LockedWisdomLayer({ topic }) {
+  const topicNotes = topicLockedLayer[topic.id] || [];
+
   return (
     <article className="rounded-[1.5rem] border border-white/10 bg-white/[0.05] p-5 backdrop-blur-2xl">
       <div className="mb-4 flex items-center gap-2 text-amber-100">
         <LockKeyhole className="h-4 w-4" aria-hidden="true" />
         <div>
           <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Locked Deep Wisdom Layer</p>
-          <h3 className="mt-1 text-xl font-semibold text-white">ชั้นลึกต้องใช้บริบทจริงของชีวิต</h3>
+          <h3 className="mt-1 text-xl font-semibold text-white">ชั้นลึกสำหรับหัวข้อ: {topic.label}</h3>
         </div>
       </div>
       <p className="mb-4 text-sm leading-6 text-slate-300">
-        ชั้นลึกต้องใช้บริบทจริงของชีวิต ไม่ใช่แค่วันเกิดอย่างเดียว จึงแสดงเป็น preview แบบล็อกไว้สำหรับ Deep Talk
+        ชั้นลึกต้องใช้บริบทจริงของชีวิต ไม่ใช่แค่วันเกิดและหัวข้ออย่างเดียว จึงแสดงเป็น preview แบบล็อกไว้สำหรับ Deep Talk
       </p>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="mb-4 grid gap-3 sm:grid-cols-2">
+        {topicNotes.map((note) => (
+          <div key={note} className="rounded-2xl border border-amber-200/15 bg-amber-200/10 p-3 text-sm leading-6 text-amber-50">
+            {note}
+          </div>
+        ))}
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
         {lockedDeepWisdomCards.map((card) => (
           <div key={card.title} className="rounded-2xl border border-white/10 bg-slate-950/35 p-4">
             <div className="mb-2 flex items-center gap-2 text-amber-100">
@@ -385,13 +465,18 @@ function KnowledgeNotes({ openNote, onToggle }) {
   );
 }
 
-function SourceTrace() {
+function SourceTrace({ preview, selectedDate, selectedTopic }) {
+  const birthDisplay = preview
+    ? `${preview.inputs.birthDay}/${preview.inputs.birthMonth}/${preview.inputs.birthYear} ${preview.inputs.yearType}`
+    : "จะแสดงหลังสร้างพรีวิว";
+  const topic = preview?.topic || selectedTopic;
   const traceRows = [
-    ["โหมดการคำนวณ", sourceTraceDefinitions.mode],
-    ["หลักที่ใช้", sourceTraceDefinitions.calculationType],
-    ["ข้อมูลที่ใช้", sourceTraceDefinitions.inputs.join(", ")],
-    ["ระดับความละเอียด", sourceTraceDefinitions.sourceLevel],
-    ["สิ่งที่ยังไม่เปิดในผลฟรี", sourceTraceDefinitions.lockedReason]
+    ["วันที่ที่เลือก", preview?.inputs.selectedDate || selectedDate],
+    ["วันเกิดที่ใช้คำนวณ", birthDisplay],
+    ["ระบบปีที่ใช้", preview?.inputs.yearType || "พ.ศ. / ค.ศ."],
+    ["หัวข้อที่เลือก", topic.label],
+    ["โหมดการคำนวณ", sourceTraceDefinitions.calculationType],
+    ["ข้อมูลที่ไม่ได้นำมาใช้ในผลฟรี", sourceTraceDefinitions.excludedInputs.join(", ")]
   ];
 
   return (
