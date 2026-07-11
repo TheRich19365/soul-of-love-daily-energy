@@ -21,7 +21,7 @@ const headerLinks = [
 const footerLinks = [
   { key: "portfolioHub", icon: ArrowUpRight },
   { key: "dailyEnergy", icon: Sparkles, useLocalHref: true },
-  { key: "thaiWisdom", icon: CalendarDays, useLocalHref: true },
+  { key: "thaiWisdom", label: "Thai Wisdom / ฤกษ์ดี", icon: CalendarDays, useLocalHref: true },
   { key: "matrix9", icon: Sparkles },
   { key: "lineOA", icon: MessageCircle, value: contactLinks.lineOA.id, primary: true },
   { key: "email", icon: Mail, useMailto: true, value: contactLinks.email.address },
@@ -114,7 +114,7 @@ export function EcosystemFooter() {
               >
                 <span className="flex items-center gap-2 text-sm font-semibold">
                   <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span className="truncate">{config.label}</span>
+                  <span className="truncate">{link.label || config.label}</span>
                 </span>
                 {link.value ? <span className="mt-1 block break-words text-xs text-slate-400">{link.value}</span> : null}
               </a>
