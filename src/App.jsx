@@ -18,6 +18,7 @@ import { DailyDraw } from "./components/HeroCard.jsx";
 import { DailySummary, DailyInsights, ProductInfoPanel, ReadingSectionHeader } from "./components/ReadingSection.jsx";
 import { PromptPanel } from "./components/PromptPanel.jsx";
 import { EcosystemFooter, HeaderContactNav } from "./components/ContactAccess.jsx";
+import { EnergyServicePackages } from "./components/EnergyServicePackages.jsx";
 import { SignalPill } from "./components/common/SoulUI.jsx";
 import { modes, navItems, revealContainer } from "./platform/config/uiConstants.js";
 
@@ -170,6 +171,19 @@ export default function App() {
             </div>
           </motion.section>
         )}
+
+        {hasDrawn && drawPhase === "revealed" ? (
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.65, ease: "easeOut" }}
+          >
+            <div className="mb-5 rounded-[1.5rem] border border-amber-200/20 bg-amber-200/[0.055] px-4 py-3 text-sm leading-7 text-amber-50/85 shadow-[0_0_30px_rgba(248,199,107,.08)] backdrop-blur-2xl">
+              หากผลนี้สะท้อนบางสิ่งที่คุณกำลังเผชิญอยู่ สามารถอ่านต่อในชั้นลึกผ่านการพูดคุยกับ Win Soul of Love
+            </div>
+            <EnergyServicePackages />
+          </motion.div>
+        ) : null}
 
         {!hasDrawn && <PreDrawAnchorPanels onDraw={() => drawEnergy("draw_card")} disabled={drawPhase !== "idle" && drawPhase !== "revealed"} />}
 
